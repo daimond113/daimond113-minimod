@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('../server.js')
 import * as discord from 'discord.js'
 import { client } from './client'
 
@@ -32,7 +32,7 @@ client.on('message', async (message: discord.Message) => {
 		if (element.test(message.content)) {
 			message.channel.send(
 				`<@${message.author
-					.id}>, Sorry but that link is censored! Feel like it's a mistake? You can make a issue on https://github.com/daimond113/daimond113-minimod/issues`
+					.id}>, Sorry but that link is censored! Feel like it's a mistake? You can make a issue on <https://github.com/daimond113/daimond113-minimod/issues>`
 			)
 			message.delete()
 		}
