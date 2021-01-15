@@ -1,7 +1,6 @@
 require('../server.js')
 import * as discord from 'discord.js'
 import { client } from './client'
-const config = require('../config.json')
 const e = require('../commands/controlHelpChannels.js')
 
 client.on('ready', () => {
