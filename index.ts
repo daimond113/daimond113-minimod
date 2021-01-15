@@ -1,6 +1,8 @@
 require('../server.js')
 import * as discord from 'discord.js'
 import { client } from './client'
+const config = require('../config.json')
+const e = require('../commands/controlHelpChannels.js')
 
 client.on('ready', () => {
 	console.log('ready!')
@@ -14,20 +16,7 @@ const regex = [
 ]
 
 client.on('message', async (message: discord.Message) => {
-	/*if (message.content == 'secretRules') {
-		const embed = new discord.MessageEmbed().setColor('GREEN').setTitle('Rules').setDescription(`
-        1. Don't ping staff for no reason! You can find a channel for that in "Free Help Channels"
-        2. DO NOT be toxic!
-        3. Bypassing the filter will get you punished from a warn to a ban depending on what's bypassed
-        4. English is the only language allowed!
-        5. DO NOT post NSFW that will result in a insta-ban
-        6. Attempting to use alternative accounts or leaving and joining back to bypass punishments will result in a perma-ban.
-        7. Advertising in any form will result in a punishment
-        8. Respect discord's ToS you can find it here: https://discordapp.com/terms
-            `)
-		let chanle = message.guild.channels.cache.get('799342852702077018') as discord.TextChannel
-		chanle.send(embed)
-    }*/ //just used for rules
+  if (message.author.id == client.user.id) return
 	regex.forEach((element) => {
 		if (element.test(message.content)) {
 			message.channel.send(
@@ -37,6 +26,7 @@ client.on('message', async (message: discord.Message) => {
 			message.delete()
 		}
 	})
+	e.execute(message)
 })
 
 client.login(process.env.token)
