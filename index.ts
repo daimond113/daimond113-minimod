@@ -28,4 +28,16 @@ client.on('message', async (message: discord.Message) => {
 	e.execute(message)
 })
 
+client.on('guildMemberAdd', async (member) => {
+  const embed = new discord.MessageEmbed()
+  .setTitle(`Welcome, ${member.user.username}`)
+  .setAuthor(member.user.username, member.user.displayAvatarURL({format: 'png', dynamic: true, size: 4096}))
+  .setColor('GREEN')
+  .setDescription(`
+  Welcome to ${member.guild.name}! We hope you will have a great experience here!`)
+  const a = await client.guilds.cache.get('799341812686127134').channels.cache.get('799343169753317397') as discord.TextChannel
+  a.send(embed)
+})
+
+
 client.login(process.env.token)

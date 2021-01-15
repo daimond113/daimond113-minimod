@@ -67,7 +67,7 @@ module.exports.execute = async (message) => {
 			.setDescription(
 				`${message.author.toString()} you took this channel! Now wait until your question is answered! If it is, say ${config.prefix}close`
 			)
-			.setFooter(`Automatically closing this channel after ${config.noActivity / 60000} minutes!`)
+			.setFooter(`Automatically closing this channel after ${config.noActivity / 60000} minutes of inactivity!`)
 		message.channel.send(embed)
 		message.channel.setParent('799343757115785246')
 	}
