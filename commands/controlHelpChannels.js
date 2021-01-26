@@ -1,36 +1,41 @@
 const config = require('../config.json')
 const discord = require('discord.js')
+const occupiedID = "799343757115785246"
+const avaliableID = "799343688311767050"
 
 function handleFree(message, item) {
-	if (message.channel.parent.name.toLowerCase() == 'occupied help channels') {
+	if (message.channel.parentID == occupiedID) {
+    if (item) {
 		item.unpin()
+    }
 		const embed = new discord.MessageEmbed()
 			.setColor('GREEN')
 			.setTitle(`Free help channel!`)
 			.setDescription(`This channel is now free for anyone, say a question!`)
 		message.channel.send(embed)
-		message.channel.setParent('799343688311767050')
+		message.channel.setParent(avaliableID)
 	}
 }
 
-const channels = {}
-
 async function handleExpired(message, o) {
-	if (message.channel.parent.name.toLowerCase() == 'occupied help channels') {
+	if (message.channel.parentID == occupiedID) {
 		const A2 = await message.channel.messages.fetchPinned()
 		if (A2.size > 0) {
-			A2.forEach(async (item) => {
+			for (const item of A2) {
 				if (item.pinned == true) {
 					handleFree(message, item)
-          clearInterval(o)
+					clearInterval(o)
 				}
-			})
+			}
+		} else {
+			handleFree(message)
+			clearInterval(o)
 		}
 	}
 }
 
-
 function isExpired(channel) {
+  if (channel.lastMessage == undefined || channel.lastMessage == null) return true
   const expiresAt = channel.lastMessage.createdAt.getTime() + config.noActivity
   return (expiresAt - Date.now()) <= 0
 }
@@ -42,24 +47,32 @@ module.exports.execute = async (message) => {
 	if (message.channel.type !== 'text') {
 		return
 	}
-	const A = await message.channel.messages.fetchPinned()
-  let e = setInterval(() => {
-  if (isExpired(message.channel)) {
-    handleExpired(message, e)
-  }
-  }, 1000)
+	if (!message.channel.lastMessage) {
+		return
+	}
+	let e = setInterval(() => {
+		if (isExpired(message.channel)) {
+			handleExpired(message, e)
+		}
+	}, 1000)
+  let A = await message.channel.messages.fetchPinned()
 	if (A.size > 0) {
-		A.forEach(async (item) => {
+		for (const item of A) {
 			if (item.pinned == true) {
 				if (message.content.toLowerCase() == `${config.prefix}close`) {
 					handleFree(message, item)
-          clearInterval(e)
+					clearInterval(e)
 				}
 			}
-		})
+		}
+	} else {
+		if (message.content.toLowerCase() == `${config.prefix}close`) {
+			handleFree(message)
+			clearInterval(e)
+		}
 	}
-  
-	if (message.channel.parent && message.channel.parent.name.toLowerCase() == 'free help channels') {
+
+	if (message.channel.parent && message.channel.parentID == avaliableID) {
 		message.pin()
 		const embed = new discord.MessageEmbed()
 			.setColor('GREEN')
@@ -69,7 +82,6 @@ module.exports.execute = async (message) => {
 			)
 			.setFooter(`Automatically closing this channel after ${config.noActivity / 60000} minutes of inactivity!`)
 		message.channel.send(embed)
-		message.channel.setParent('799343757115785246')
+		message.channel.setParent(occupiedID)
 	}
-  console.log(message.channel.parent.name.toLowerCase() == 'occupied help channel')
 }
