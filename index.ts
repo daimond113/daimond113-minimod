@@ -39,5 +39,4 @@ client.on('guildMemberAdd', async (member) => {
   a.send(embed)
 })
 
-
 client.login(process.env.token)

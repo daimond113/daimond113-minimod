@@ -3,7 +3,9 @@ const discord = require('discord.js')
 
 function handleFree(message, item) {
 	if (message.channel.parent.name.toLowerCase() == 'occupied help channels') {
+    if (item) {
 		item.unpin()
+    }
 		const embed = new discord.MessageEmbed()
 			.setColor('GREEN')
 			.setTitle(`Free help channel!`)
@@ -19,18 +21,22 @@ async function handleExpired(message, o) {
 	if (message.channel.parent.name.toLowerCase() == 'occupied help channels') {
 		const A2 = await message.channel.messages.fetchPinned()
 		if (A2.size > 0) {
-			A2.forEach(async (item) => {
+			for (const item of A2)
 				if (item.pinned == true) {
 					handleFree(message, item)
           clearInterval(o)
 				}
-			})
+			}
+      else {
+        handleFree(message)
+        clearInterval(o)
+      }
 		}
 	}
-}
 
 
 function isExpired(channel) {
+  if (!channel.lastMessage) return true
   const expiresAt = channel.lastMessage.createdAt.getTime() + config.noActivity
   return (expiresAt - Date.now()) <= 0
 }
@@ -44,20 +50,28 @@ module.exports.execute = async (message) => {
 	}
 	const A = await message.channel.messages.fetchPinned()
   let e = setInterval(() => {
+    if (!channel.lastMessage) {
+    handleFree(message)
+    clearInterval(e)
+  }
   if (isExpired(message.channel)) {
     handleExpired(message, e)
   }
   }, 1000)
 	if (A.size > 0) {
-		A.forEach(async (item) => {
+		for (const item of A) {
 			if (item.pinned == true) {
 				if (message.content.toLowerCase() == `${config.prefix}close`) {
 					handleFree(message, item)
           clearInterval(e)
 				}
 			}
-		})
+		}
 	}
+  else {
+    handleFree(message)
+    clearInterval(e)
+  }
   
 	if (message.channel.parent && message.channel.parent.name.toLowerCase() == 'free help channels') {
 		message.pin()
