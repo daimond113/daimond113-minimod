@@ -1,8 +1,10 @@
 const config = require('../config.json')
 const discord = require('discord.js')
+const occupiedID = "799343757115785246"
+const freeId = "799343688311767050"
 
 function handleFree(message, item) {
-	if (message.channel.parent.name.toLowerCase() == 'occupied help channels') {
+	if (message.channel.parentID == occupiedID) {
     if (item) {
 		item.unpin()
     }
@@ -11,14 +13,14 @@ function handleFree(message, item) {
 			.setTitle(`Free help channel!`)
 			.setDescription(`This channel is now free for anyone, say a question!`)
 		message.channel.send(embed)
-		message.channel.setParent('799343688311767050')
+		message.channel.setParent(freeId)
 	}
 }
 
 const channels = {}
 
 async function handleExpired(message, o) {
-	if (message.channel.parent.name.toLowerCase() == 'occupied help channels') {
+	if (message.channel.parentID == occupiedID) {
 		const A2 = await message.channel.messages.fetchPinned()
 		if (A2.size > 0) {
 			for (const item of A2)
@@ -48,9 +50,15 @@ module.exports.execute = async (message) => {
 	if (message.channel.type !== 'text') {
 		return
 	}
+	if (message.channel.parentID != freeId && message.channel.parentID != occupiedID) {
+    console.log(message.channel.parentID)
+    console.log(freeId, occupiedID)
+		return
+	}
+  console.log('o')
 	const A = await message.channel.messages.fetchPinned()
   let e = setInterval(() => {
-    if (!channel.lastMessage) {
+    if (!message.channel.lastMessage) {
     handleFree(message)
     clearInterval(e)
   }
@@ -73,7 +81,7 @@ module.exports.execute = async (message) => {
     clearInterval(e)
   }
   
-	if (message.channel.parent && message.channel.parent.name.toLowerCase() == 'free help channels') {
+	if (message.channel.parent && message.channel.parentID == freeId) {
 		message.pin()
 		const embed = new discord.MessageEmbed()
 			.setColor('GREEN')
@@ -83,7 +91,6 @@ module.exports.execute = async (message) => {
 			)
 			.setFooter(`Automatically closing this channel after ${config.noActivity / 60000} minutes of inactivity!`)
 		message.channel.send(embed)
-		message.channel.setParent('799343757115785246')
+		message.channel.setParent(occupiedID)
 	}
-  console.log(message.channel.parent.name.toLowerCase() == 'occupied help channel')
 }
