@@ -1,9 +1,10 @@
 import { Collection, Message, Snowflake, TextChannel } from 'discord.js'
+import * as config from '../config.json'
 
-const CATEGORY_FREE_ID = "807336770323873852"
-const CATEGORY_TAKEN_ID = "807336718637858886"
+const CATEGORY_FREE_ID = "799343688311767050"
+const CATEGORY_TAKEN_ID = "799343757115785246"
 
-const CHANNEL_TIMEOUT = 10 * 1000
+const CHANNEL_TIMEOUT = config.noActivity
 
 const timeouts = new Collection<Snowflake, {
     infoMsg: Message,
@@ -12,7 +13,7 @@ const timeouts = new Collection<Snowflake, {
 }>()
 
 export async function handleMessage(message: Message) {
-    if (message.content === '!close') {
+    if (message.content === `${config.prefix}close`) {
         if ((message.channel as TextChannel).parentID === CATEGORY_TAKEN_ID) {
             timeoutHandler(message.channel as TextChannel)
         }
