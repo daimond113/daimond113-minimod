@@ -5,8 +5,8 @@ const DISALLOWED_DOMAINS = [
     'discord.io',
     'discord.me',
     'discord.li',
-    'discord.com',
-    'discordapp.com',
+    'discord.com/invite/',
+    'discordapp.com/invite/',
 
     'twitter.com',
     'soundcloud.com',
@@ -14,7 +14,7 @@ const DISALLOWED_DOMAINS = [
 ]
 
 const regexes = DISALLOWED_DOMAINS.map(domain => (
-    new RegExp(`(.+\\.)?${domain.replace('.', '\\.')}`, 'i')
+    new RegExp(`(.+\\.)?${domain.replace('.', '\\.').replace('/', '\\/')}`, 'i')
 ))
 
 export function hasLinks(message: Message) {
