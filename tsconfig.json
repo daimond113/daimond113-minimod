@@ -3,7 +3,8 @@
         "module": "CommonJS",
         "outDir": "build",
         "target": "es6",
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "esModuleInterop": true
     },
     "includes": [
         "src/**/*"
