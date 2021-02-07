@@ -4,6 +4,7 @@ import { Client, TextChannel, Intents } from 'discord.js'
 import { hasLinks } from './hasLinks'
 import { createWelcomeImage } from './createWelcomeImage'
 import { handleMessage as handleHelpMessage } from './helpChannelController'
+import { hasBadWords } from './hasBadWords'
 
 const client = new Client({
 	ws: {
@@ -25,6 +26,14 @@ client.on('message', async (message) => {
 				'you have sent a blacklisted link!\n' +
 				'If that is not the case please report a issue at\n' +
 				'<https://github.com/daimond113/daimond113-minimod/issues>'
+			)
+		})
+	}
+
+	if (hasBadWords(message.content)) {
+		return message.delete().then(() => {
+			return message.reply(
+				'bad word'
 			)
 		})
 	}
