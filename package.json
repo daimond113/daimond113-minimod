@@ -4,8 +4,7 @@
 	"description": "A discord bot to moderate content",
 	"main": "build/index.js",
 	"scripts": {
-		"start": "tsc && node .",
-		"dev": "tsc && node -r dotenv/config ."
+		"start": "tsc && node ."
 	},
 	"repository": {
 		"type": "git",

@@ -1,92 +1,99 @@
-import { Collection, Message, Snowflake, TextChannel } from 'discord.js'
-import * as config from '../config.json'
+import { Collection, Message, MessageEmbed, Snowflake, TextChannel } from 'discord.js'
 
-const CATEGORY_FREE_ID = "799343688311767050"
-const CATEGORY_TAKEN_ID = "799343757115785246"
+const {
+    CATEGORY_FREE_ID,
+    CATEGORY_TAKEN_ID,
+    PREFIX,
+    HELP_INACTIVITY_TIME
+} = process.env
 
-const CHANNEL_TIMEOUT = config.noActivity
+const HELP_CATEGORIES = new Set([CATEGORY_FREE_ID, CATEGORY_TAKEN_ID])
+const CLOSE_COMMAND = `${PREFIX}close`
 
-const timeouts = new Collection<Snowflake, {
-    infoMsg: Message,
-    claimMessage: Message,
-    timeout: NodeJS.Timeout
+const channels = new Collection<Snowflake, {
+    channel: TextChannel,
+    timeout?: NodeJS.Timeout,
+    originalMessage?: Message,
+    infoMessage?: Message
 }>()
 
-export async function handleMessage(message: Message) {
-    if (message.content === `${config.prefix}close`) {
-        if ((message.channel as TextChannel).parentID === CATEGORY_TAKEN_ID) {
-            timeoutHandler(message.channel as TextChannel)
-        }
-        return
-    }
+export async function handleMessage(msg: Message) {
+    if (!HELP_CATEGORIES.has((msg.channel as TextChannel).parentID)) return
 
-    if (
-        (message.channel as TextChannel).parentID === CATEGORY_FREE_ID ||
-        (message.channel as TextChannel).parentID === CATEGORY_TAKEN_ID
-    ) {
-        let msg: Message
-        let claimMessage: Message
+    const isChannelClaimed = channels.has(msg.channel.id)
 
-        if (timeouts.has(message.channel.id)) {
-            const timeout = timeouts.get(message.channel.id)
-            msg = timeout.infoMsg
-            claimMessage = timeout.claimMessage
+    try {
+        if (isChannelClaimed) {
+            const channelInfo = channels.get(msg.channel.id)
+            if (!channelInfo.timeout) return
 
-            clearTimeout(timeout.timeout)
+            if (
+                msg.content.toLowerCase() === CLOSE_COMMAND &&
+                msg.author.id === channelInfo.originalMessage.author.id
+            ) {
+                clearTimeout(channelInfo.timeout)
+                return closeChannel(msg.channel as TextChannel)
+            }
+
+            clearTimeout(channelInfo.timeout)
+            channelInfo.timeout = setTimeout(closeChannel, Number(HELP_INACTIVITY_TIME), channelInfo.channel)
         } else {
-            msg = await message.channel.send({
-                embed: {
-                    title: 'Channel has been claimed',
-                    description: `${message.author} has claimed this channel`,
-                    footer: {
-                        text: `Channel will close after ${CHANNEL_TIMEOUT / (60 * 1000)} minutes of inactivity`
-                    }
-                }
+            channels.set(msg.channel.id, { channel: msg.channel as TextChannel })
+
+            const embed = new MessageEmbed()
+                .setAuthor(msg.member.displayName, msg.author.displayAvatarURL())
+                .setTitle('Channel Claimed')
+                .setDescription(
+                    'This channel has been claimed\n' +
+                    `Say \`${CLOSE_COMMAND}\` to close.`
+                )
+                .setFooter(`Closes after ${Number(HELP_INACTIVITY_TIME) / 60000} minutes of inactivity`)
+
+            const infoMessage = await msg.channel.send(embed)
+                .catch(e => {
+                    channels.delete(msg.channel.id)
+                    throw e
+                });
+
+            (msg.channel as TextChannel).setParent(CATEGORY_TAKEN_ID).catch(console.error)
+
+            channels.set(msg.channel.id, {
+                channel: msg.channel as TextChannel,
+                timeout: setTimeout(
+                    closeChannel,
+                    Number(HELP_INACTIVITY_TIME),
+                    msg.channel as TextChannel
+                ),
+                originalMessage: msg,
+                infoMessage
             })
 
-            claimMessage = message
-
-            await (message.channel as TextChannel).setParent(CATEGORY_TAKEN_ID)
+            msg.pin().catch(console.error)
         }
-
-        if (timeouts.has(message.channel.id)) {
-            message.unpin().catch(() => { })
-            claimMessage.delete().catch(() => { })
-            msg.delete().catch(() => { })
-
-            return message.channel.send(
-                '***Warn:** Ignore this warning*\n' +
-                '*`channel_already_claimed`*'
-            )
-                .then(msg => new Promise(r => setTimeout(r, 5000, msg)))
-                .then(msg => (msg as Message).delete())
-                .catch(() => { })
-        }
-
-        message.pin().catch(() => { })
-
-        timeouts.set(message.channel.id, {
-            timeout: setTimeout(timeoutHandler, CHANNEL_TIMEOUT, message.channel),
-            infoMsg: msg,
-            claimMessage
-        })
+    } catch (e) {
+        await msg.channel.send(
+            ':x: An error occurred\n```\n' + e.message + '\n```'
+        ).catch(console.error)
     }
 }
 
-async function timeoutHandler(channel: TextChannel) {
-    const { infoMsg, claimMessage } = timeouts.get(channel.id)
-    await Promise.all([
-        claimMessage.unpin().catch(() => { }),
-        infoMsg.edit('*Expired*', { embed: null })
-    ])
+function closeChannel(channel: TextChannel) {
+    const channelInfo = channels.get(channel.id)
+    if (!channelInfo) return
 
-    timeouts.delete(channel.id)
+    channels.delete(channel.id)
 
-    await channel.setParent(CATEGORY_FREE_ID)
-    await channel.send({
-        embed: {
-            title: 'Channel is free!',
-            description: 'Type a message to claim this channel.'
-        }
-    })
+    !channelInfo.originalMessage.deleted &&
+        channelInfo.originalMessage?.unpin().catch(console.error)
+
+    !channelInfo.infoMessage.deleted &&
+        channelInfo.infoMessage?.edit('*Closed*', { embed: null }).catch(console.error)
+
+    channel.setParent(CATEGORY_FREE_ID).catch(console.error)
+
+    const embed = new MessageEmbed()
+        .setTitle('Free Channel')
+        .setDescription('Send a message to claim this channel')
+
+    channel.send(embed)
 }

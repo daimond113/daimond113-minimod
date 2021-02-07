@@ -44,11 +44,11 @@ export async function createWelcomeImage(member: GuildMember) {
     ctx.textBaseline = "top"
     ctx.fillStyle = 'white'
     ctx.font = '60px Roboto'
-    ctx.fillText(member.user.username, x, s)
+    ctx.fillText(member.displayName, x, s, 500)
     ctx.strokeStyle = 'white'
     ctx.beginPath()
     ctx.lineTo(x - 5, s + 72)
-    ctx.lineTo((canvas.width - s) + 45, s + 72)
+    ctx.lineTo((canvas.width - s) + 55, s + 72)
     ctx.stroke()
     ctx.font = '30px Roboto'
     ctx.fillText(
