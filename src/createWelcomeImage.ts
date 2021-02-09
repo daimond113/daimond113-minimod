@@ -56,7 +56,7 @@ export async function createWelcomeImage(member: GuildMember) {
         "We hope you will have a great\n" +
         "experience here and meet lots of\n" +
         "other programmers",
-        x, s + 78
+        x, s + 78, canvas.width
     )
 
     return new MessageAttachment(canvas.toBuffer('image/png'))

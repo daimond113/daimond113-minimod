@@ -33,7 +33,7 @@ client.on('message', async (message) => {
 	if (hasBadWords(message.content)) {
 		return message.delete().then(() => {
 			return message.reply(
-				'bad word'
+				'I\'ve detected a bad word in your message!\nPlease do not try to use bad words.\nFeel like this is an issue? Report it on https://github.com/daimond113/daimond113-minimod/issues'
 			)
 		})
 	}
@@ -43,7 +43,7 @@ client.on('message', async (message) => {
 
 client.on('guildMemberAdd', async (member) => {
 	await member.guild.fetch()
-	const channel = await client.channels.fetch('806936473005064206') as TextChannel
+	const channel = await client.channels.fetch('799343169753317397') as TextChannel
 	channel.send(await createWelcomeImage(member))
 })
 
