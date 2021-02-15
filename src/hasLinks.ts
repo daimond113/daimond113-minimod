@@ -1,4 +1,4 @@
-import type { Message } from 'discord.js'
+import { Message } from 'discord.js'
 
 const DISALLOWED_DOMAINS = [
     'discord.gg',
@@ -17,8 +17,14 @@ const regexes = DISALLOWED_DOMAINS.map(domain => (
     new RegExp(`(.+\\.)?${domain.replace('.', '\\.').replace('/', '\\/')}`, 'i')
 ))
 
-export function hasLinks(message: Message) {
+export async function hasLinks(message: Message) {
+  const user = await message.guild.members.fetch(message.author.id)
+  if (
+            user.roles.cache.some((role) => role.name.toLowerCase() == 'moderator') ||
+            user.roles.cache.some((role) => role.name.toLowerCase() == 'owner')
+        ) return
+    const noSpaceAndTab = message.content.replace(/\s/ig, '')
     return regexes.some(regex => (
-        message.content.match(regex)
+        noSpaceAndTab.match(regex)
     ))
 }
